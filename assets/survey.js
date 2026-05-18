@@ -35,6 +35,14 @@ const state = {};
 let currentStep = 0;
 const steps = ['intro','eligibility','part1','part2','part3_1','part3_2','part3_3','part4','part5','submit'];
 
+// 제출 완료 상태 (같은 브라우저에서 중복 제출 방지)
+let submitted = false;
+let submittedId = null;
+try {
+  const prev = localStorage.getItem('survey_submitted_id');
+  if (prev) { submitted = true; submittedId = prev; }
+} catch (e) {}
+
 function el(tag, attrs={}, ...children){
   const n = document.createElement(tag);
   for (const k in attrs){
@@ -406,9 +414,28 @@ function validateStep(stepKey){
   return errors;
 }
 
+function renderThankYou(){
+  const root = document.getElementById('app');
+  root.innerHTML = '';
+  const section = el('section',{class:'card notice success'});
+  section.appendChild(el('h2',{}, '제출이 완료되었습니다'));
+  section.appendChild(el('p',{}, '응답해 주셔서 진심으로 감사합니다.'));
+  section.appendChild(el('p',{class:'muted'}, '이 창은 닫으셔도 됩니다.'));
+  if (submittedId) {
+    section.appendChild(el('p',{class:'muted'}, `제출 ID: ${submittedId}`));
+  }
+  root.appendChild(section);
+}
+
 function render(){
   const root = document.getElementById('app');
   root.innerHTML = '';
+
+  // 이미 제출 완료된 경우 감사 화면 고정 (이전/재제출 차단)
+  if (submitted){
+    renderThankYou();
+    return;
+  }
 
   // 자격 미달이면 종료 화면 고정
   if (state.q0 != null && (state.q0 < 3 || state.q0 > 6)){
@@ -504,8 +531,11 @@ async function submitSurvey(){
     });
     const data = await res.json();
     if (data.ok){
-      status.innerHTML = '<strong>제출이 완료되었습니다.</strong> 응답해 주셔서 감사합니다.';
-      status.classList.add('success');
+      submitted = true;
+      submittedId = data.id || '';
+      try { localStorage.setItem('survey_submitted_id', submittedId || '1'); } catch(e){}
+      renderThankYou();
+      window.scrollTo(0, 0);
     } else {
       throw new Error(data.error || '알 수 없는 오류');
     }
