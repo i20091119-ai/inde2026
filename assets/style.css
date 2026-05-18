@@ -163,7 +163,19 @@ textarea { min-height: 100px; resize: vertical; }
   #app { padding: 12px 10px 60px; }
   .card { padding: 14px; }
   .likert { grid-template-columns: repeat(5, 1fr); gap: 4px; }
-  .likert-cell { padding: 8px 2px; font-size: 0.78rem; }
-  .likert-cell .lbl { display: none; }
+  .likert-cell {
+    padding: 8px 2px;
+    font-size: 0.78rem;
+    min-height: 64px;
+    justify-content: flex-start;
+  }
+  .likert-cell .num { font-size: 0.95rem; }
+  .likert-cell .lbl {
+    display: block;
+    font-size: 0.62rem;
+    line-height: 1.15;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+  }
   .ipa-pair { grid-template-columns: 1fr; }
 }
