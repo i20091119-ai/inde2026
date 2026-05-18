@@ -58,7 +58,7 @@ function radioGroup(name, options, opts={}){
     const input = el('input',{type:'radio', name, id, value,
       onchange: (e)=>{ state[name] = Number(e.target.value); onChange(name); }});
     if (String(state[name]) === value) input.checked = true;
-    const lbl = el('label',{for:id,class:'choice'}, input, el('span',{},`${value}. ${label}`));
+    const lbl = el('label',{for:id,class:'choice'}, input, el('span',{}, label));
     wrap.appendChild(lbl);
   });
   return wrap;
@@ -178,9 +178,9 @@ function renderIntro(container){
 function renderEligibility(c){
   c.appendChild(el('h2',{},'응답 자격 확인'));
   c.appendChild(item('Q0','귀하는 현재 어느 학년을 담당하고 계십니까?',
-    radioGroup('q0', ['3학년','4학년','5학년','6학년','1학년','2학년','교과전담','기타'])
+    radioGroup('q0', ['1학년','2학년','3학년','4학년','5학년','6학년','교과전담','기타'])
   ));
-  if (state.q0 != null && state.q0 >= 5){
+  if (state.q0 != null && (state.q0 < 3 || state.q0 > 6)){
     c.appendChild(el('div',{class:'notice error'},
       '본 설문은 3~6학년 담임교사를 대상으로 합니다. 응답해 주셔서 감사합니다.'
     ));
@@ -361,7 +361,7 @@ function validateStep(stepKey){
 
   if (stepKey === 'eligibility'){
     need('q0','Q0');
-    if (state.q0 != null && state.q0 >= 5) errors.push('__terminate__');
+    if (state.q0 != null && (state.q0 < 3 || state.q0 > 6)) errors.push('__terminate__');
   }
   if (stepKey === 'part1'){
     [1,2,3,4,5,6,7].forEach(n=>need(`q${n}`,`Q${n}`));
@@ -411,7 +411,7 @@ function render(){
   root.innerHTML = '';
 
   // 자격 미달이면 종료 화면 고정
-  if (state.q0 != null && state.q0 >= 5){
+  if (state.q0 != null && (state.q0 < 3 || state.q0 > 6)){
     root.appendChild(el('h1',{},'설문 안내'));
     root.appendChild(el('div',{class:'card notice error'},
       el('p',{},'본 설문은 정보교육 운영 경험이 있는 3~6학년 담임교사를 대상으로 합니다.'),
