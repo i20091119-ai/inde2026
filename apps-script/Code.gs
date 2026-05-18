@@ -2,18 +2,27 @@
  * 경상남도 초등교사 정보교육 인식·요구도 설문 - 백엔드
  *
  * 배포 절차:
- *   1) https://docs.google.com/spreadsheets/d/1l6gpTG8U5FoCUgPdHKXZG4GLySnsfxxrOav_VMu6XS0
- *      위 시트의 "확장 프로그램 → Apps Script" 진입
- *   2) Code.gs 와 setup-headers.gs 를 동일한 프로젝트에 붙여넣기
- *   3) setupHeaders() 함수를 1회 실행해 첫 번째 행에 SPSS용 컬럼 헤더를 작성
- *   4) "배포 → 새 배포 → 유형: 웹앱"
+ *   1) 응답을 저장할 Google Sheet 의 "확장 프로그램 → Apps Script" 진입
+ *   2) Code.gs 를 동일한 프로젝트에 붙여넣기
+ *   3) Apps Script 편집기 좌측 톱니바퀴(프로젝트 설정) → "스크립트 속성"
+ *        - 속성: SPREADSHEET_ID
+ *        - 값:   응답을 저장할 시트의 ID (URL 의 /d/ 와 /edit 사이 문자열)
+ *   4) setupHeaders() 함수를 1회 실행해 첫 번째 행에 SPSS용 컬럼 헤더를 작성
+ *   5) "배포 → 새 배포 → 유형: 웹앱"
  *        - 액세스 권한: "모든 사용자"
  *        - 다음으로 실행: "나"
  *      배포 후 생성되는 URL 을 assets/config.js 의 SURVEY_ENDPOINT 에 넣기
  */
 
-const SPREADSHEET_ID = '1l6gpTG8U5FoCUgPdHKXZG4GLySnsfxxrOav_VMu6XS0';
 const SHEET_NAME = '응답';
+
+function getSpreadsheetId_() {
+  const id = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
+  if (!id) {
+    throw new Error('스크립트 속성 SPREADSHEET_ID 가 설정되지 않았습니다. 프로젝트 설정 → 스크립트 속성에서 추가하세요.');
+  }
+  return id;
+}
 
 // ========== 컬럼 정의 ==========
 // SPSS 친화적 wide format. 복수응답은 0/1 더미 코딩.
@@ -111,7 +120,7 @@ function getColumns_() {
 
 // ========== 헤더 자동 생성 ==========
 function setupHeaders() {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const ss = SpreadsheetApp.openById(getSpreadsheetId_());
   let sheet = ss.getSheetByName(SHEET_NAME);
   if (!sheet) sheet = ss.insertSheet(SHEET_NAME);
 
@@ -143,7 +152,7 @@ function doPost(e) {
   lock.waitLock(15000);
   try {
     const payload = JSON.parse(e.postData.contents || '{}');
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const ss = SpreadsheetApp.openById(getSpreadsheetId_());
     let sheet = ss.getSheetByName(SHEET_NAME);
     if (!sheet) {
       setupHeaders();
